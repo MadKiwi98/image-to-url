@@ -1,0 +1,81 @@
+from flask import Flask, request, render_template_string, url_for
+import os
+import base64
+import uuid
+
+app = Flask(__name__)
+
+# Directory to store uploaded images
+UPLOAD_FOLDER = 'uploaded_images/'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# HTML template for the upload page
+html_template = '''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Upload</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            text-align: center;
+            padding: 20px;
+        }
+        input[type="file"] {
+            margin: 20px;
+        }
+        img {
+            max-width: 90%;
+            height: auto;
+            margin: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <h1>Upload an Image</h1>
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+        <input type="file" name="image" accept="image/*" required>
+        <button type="submit">Upload</button>
+    </form>
+    {% if image_url %}
+    <h2>Uploaded Image:</h2>
+    <img src="{{ image_url }}" alt="Uploaded Image">
+    <p>URL: <a href="{{ image_url }}" target="_blank">{{ image_url }}</a></p>
+    {% endif %}
+</body>
+</html>
+'''
+
+@app.route('/', methods=['GET'])
+def index():
+    return render_template_string(html_template)
+
+@app.route('/upload', methods=['POST'])
+def upload():
+    if 'image' not in request.files:
+        return "No file part"
+    file = request.files['image']
+    if file.filename == '':
+        return "No selected file"
+    if file:
+        # Save the file with a unique name
+        filename = str(uuid.uuid4()) + os.path.splitext(file.filename)[-1]
+        filepath = os.path.join(UPLOAD_FOLDER, filename)
+        file.save(filepath)
+
+        # Convert the image to base64
+        with open(filepath, 'rb') as image_file:
+            encoded_string = base64.b64encode(image_file.read()).decode('utf-8')
+            image_url = f'data:image/{filename.split(".")[-1]};base64,{encoded_string}'
+
+        # Render the HTML with the image URL
+        return render_template_string(html_template, image_url=image_url)
+
+    return "File upload failed"
+
+if __name__ == '__main__':
+    app.run(debug=True, port=5000)
