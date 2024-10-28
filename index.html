@@ -90,9 +90,9 @@ html_template = '''
 
 @app.route('/', methods=['GET'])
 def index():
-    return render_template_string(html_template)
+    return render_template_string(html_template, image_url=None)
 
-@app.route('/upload', methods=['GET', 'POST'])
+@app.route('/upload', methods=['POST'])
 def upload():
     if request.method == 'POST':
         if 'image' not in request.files:
@@ -112,7 +112,7 @@ def upload():
             # Render the HTML with the image URL
             return render_template_string(html_template, image_url=image_url)
 
-    return render_template_string(html_template)
+    return render_template_string(html_template, image_url=None)
 
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
