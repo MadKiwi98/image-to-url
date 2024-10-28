@@ -54,7 +54,7 @@ html_template = '''
 def index():
     return render_template_string(html_template)
 
-@app.route('/upload', methods=['POST'])
+@app.route('/upload', methods=['GET', 'POST'])
 def upload():
     if 'image' not in request.files:
         return "No file part"
@@ -78,4 +78,4 @@ def upload():
     return "File upload failed"
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    app.run(debug=True, port=5000, host='0.0.0.0')
